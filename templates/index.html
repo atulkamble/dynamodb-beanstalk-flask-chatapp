@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>DynamoDB Talk</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 2rem; }
+    input, button, textarea { padding: .5rem; margin: .25rem 0; width: 100%; }
+    .msg { border: 1px solid #ddd; border-radius: 8px; padding: .75rem; margin: .5rem 0; }
+    .row { display: grid; grid-template-columns: 1fr auto; gap: .5rem; align-items: center; }
+    .muted { color: #666; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <h1>💬 DynamoDB Talk</h1>
+  <p>Simple chat-like messages per <strong>room</strong>, backed by DynamoDB.</p>
+
+  <label>Room ID</label>
+  <input id="room" value="general" />
+
+  <label>Your name</label>
+  <input id="user" value="guest" />
+
+  <label>Message</label>
+  <textarea id="text" rows="3" placeholder="Say something..."></textarea>
+  <button onclick="send()">Send</button>
+  <button onclick="refresh()">Refresh</button>
+
+  <div id="out"></div>
+
+  <script>
+    async function send() {
+      const room = document.getElementById('room').value.trim();
+      const user = document.getElementById('user').value.trim() || 'guest';
+      const text = document.getElementById('text').value.trim();
+      if (!text) return alert('Enter a message');
+      const r = await fetch(`/api/rooms/${encodeURIComponent(room)}/messages`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ user, text })
+      });
+      if (!r.ok) return alert('Failed: ' + await r.text());
+      document.getElementById('text').value = '';
+      refresh();
+    }
+
+    async function refresh() {
+      const room = document.getElementById('room').value.trim();
+      const r = await fetch(`/api/rooms/${encodeURIComponent(room)}/messages?limit=50`);
+      const data = await r.json();
+      const out = document.getElementById('out');
+      out.innerHTML = data.map(m => `
+        <div class="msg">
+          <div class="row">
+            <div><strong>${escapeHtml(m.user||'')}</strong> <span class="muted">#${m.msg_id}</span></div>
+            <button onclick="del('${room}','${m.msg_id}')">Delete</button>
+          </div>
+          <div>${escapeHtml(m.text||'')}</div>
+          <div class="muted">${new Date(m.ts||0).toLocaleString()}</div>
+        </div>
+      `).join('');
+    }
+
+    async function del(room, id) {
+      const r = await fetch(`/api/rooms/${encodeURIComponent(room)}/messages/${encodeURIComponent(id)}`, { method:'DELETE' });
+      if (r.status === 204) refresh(); else alert('Failed: ' + await r.text());
+    }
+
+    function escapeHtml(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+    refresh();
+  </script>
+</body>
+</html>
