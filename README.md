@@ -4,6 +4,31 @@
 
 # Full Stack: Flask + DynamoDB on Elastic Beanstalk
 
+```
+server | t3.medium | key.pem | SG: ssh:22, http:80, https:443, flask:5000
+
+cd Downloads
+chmod 400 key.pem 
+ssh -i "key.pem" ec2-user@ec2-3-94-209-74.compute-1.amazonaws.com
+
+sudo yum update -y
+sudo yum install git python tree -y
+sudo yum install pip -y
+pip install ulid-py
+pip install flask
+pip install boto3
+
+git config --global user.name "Atul Kamble"
+git config --global user.email "atul_kamble@hotmail.com"
+
+git clone https://github.com/atulkamble/dynamodb-beanstalk-flask-chatapp.git
+cd dynamodb-beanstalk-flask-chatapp
+
+python3 application.py 
+
+http://3.94.209.74:5000/
+```
+
 ## Repo structure
 
 ```
