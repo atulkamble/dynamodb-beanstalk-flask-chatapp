@@ -7,7 +7,7 @@
 ## Repo structure
 
 ```
-dynamodb-beanstalk-talk/
+dynamodb-beanstalk-flask-chatapp/
 ├─ application.py
 ├─ requirements.txt
 ├─ runtime.txt
